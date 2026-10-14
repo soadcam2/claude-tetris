@@ -1,0 +1,56 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  triage:
+    # Solo issues (no PRs), ignorar bots; en edited solo si cambió título o cuerpo
+    if: |
+      github.event.issue.pull_request == null &&
+      github.event.sender.type != 'Bot' &&
+      (github.event.action == 'opened' ||
+       github.event.changes.body != null ||
+       github.event.changes.title != null)
+    runs-on: ubuntu-latest
+    concurrency:
+      group: issue-triage-${{ github.event.issue.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Triage issue with Claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: >-
+            --allowedTools "Read,Grep,Glob,Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh api:*),Bash(gh label list:*),Bash(gh label create:*)"
+          prompt: |
+            Repositorio: ${{ github.repository }}
+            Issue: #${{ github.event.issue.number }}
+            Evento: ${{ github.event.action }}
+
+            Eres un asistente de triage. Solo analizas; NO modifiques código, NO crees ramas ni PRs.
+            Responde en español.
+
+            1. Lee el issue con `gh issue view ${{ github.event.issue.number }} --json title,body,labels,comments`.
+            2. Lee CLAUDE.md y el código relevante (game.js, index.html, style.css, README.md) para ubicar la causa o el área afectada.
+            3. Labels:
+               - Lista las existentes con `gh label list`. Prefiere las existentes.
+               - Si faltan, créalas con `gh label create`. Set base: `bug`, `enhancement`, `question`, `documentation`; área: `area:gameplay`, `area:ui`, `area:scoring`, `area:input`; prioridad: `priority:high`, `priority:medium`, `priority:low`.
+               - Aplica con `gh issue edit ${{ github.event.issue.number }} --add-label "a,b,c"`: exactamente un tipo, 1+ áreas, una prioridad.
+               - Si el evento es `edited`, quita con `--remove-label` las labels de tipo/área/prioridad que ya no apliquen.
+            4. Publica UN solo comentario de diagnóstico que empiece con la línea `<!-- claude-triage -->`.
+               - Busca un comentario previo con ese marcador: `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments --jq '.[] | select(.body | startswith("<!-- claude-triage -->")) | .id'`.
+               - Si existe, actualízalo: `gh api -X PATCH repos/${{ github.repository }}/issues/comments/<id> -f body="..."`. Si no, `gh issue comment ${{ github.event.issue.number }} --body "..."`.
+               - Secciones: **Resumen**, **Tipo y prioridad** (con justificación), **Causa probable / áreas afectadas** (`archivo:línea`, funciones), **Pasos de reproducción** (si es bug), **Propuesta de solución** (pasos concretos de implementación), **Riesgos / docs a sincronizar** (p. ej. README.md si cambian mecánicas), **Información faltante** (preguntas al reportante, si aplica).
+            5. Sé preciso y conciso; el diagnóstico será la base para implementar la solución después.
