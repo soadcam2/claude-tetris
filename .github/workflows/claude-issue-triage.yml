@@ -51,6 +51,12 @@ jobs:
                - Si el evento es `edited`, quita con `--remove-label` las labels de tipo/área/prioridad que ya no apliquen.
             4. Publica UN solo comentario de diagnóstico que empiece con la línea `<!-- claude-triage -->`.
                - Busca un comentario previo con ese marcador: `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments --jq '.[] | select(.body | startswith("<!-- claude-triage -->")) | .id'`.
-               - Si existe, actualízalo: `gh api -X PATCH repos/${{ github.repository }}/issues/comments/<id> -f body="..."`. Si no, `gh issue comment ${{ github.event.issue.number }} --body "..."`.
+               - Si existe, actualízalo: `gh api -X PATCH repos/${{ github.repository }}/issues/comments/<id> -F body=@-`. Si no, `gh issue comment ${{ github.event.issue.number }} --body-file -`.
                - Secciones: **Resumen**, **Tipo y prioridad** (con justificación), **Causa probable / áreas afectadas** (`archivo:línea`, funciones), **Pasos de reproducción** (si es bug), **Propuesta de solución** (pasos concretos de implementación), **Riesgos / docs a sincronizar** (p. ej. README.md si cambian mecánicas), **Información faltante** (preguntas al reportante, si aplica).
+               - Formato del comentario: Markdown de GitHub (GFM) válido, renderizable en GitHub.
+                 - Cada sección con encabezado `###` (p. ej. `### Resumen`), línea en blanco antes y después de encabezados, listas, tablas y bloques de código.
+                 - Listas con `-` o `1.`; pasos de reproducción/solución como lista numerada.
+                 - Referencias a código en `` `archivo:línea` `` o `` `función()` ``; fragmentos en bloques con lenguaje (```js, ```html, ```css).
+                 - Sin HTML salvo el marcador inicial `<!-- claude-triage -->`; sin escapes `\n` literales.
+                 - Para evitar errores de comillas/saltos de línea en shell, pasa el cuerpo por stdin con heredoc entrecomillado (`<<'EOF'`): `gh issue comment ... --body-file -` o `gh api -X PATCH ... -F body=@-`. No requiere archivos temporales (Write no está permitido).
             5. Sé preciso y conciso; el diagnóstico será la base para implementar la solución después.
