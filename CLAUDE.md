@@ -17,6 +17,8 @@ Tres archivos: `index.html` (canvas `#board` 300x600, `#next-canvas` 120x120, HU
 - Input: un único listener `keydown` (por `e.code`) al final; `togglePause` cancela/reanuda rAF.
 - Puntuación: `LINE_SCORES * level`; hard drop +2/celda, soft drop +1/fila.
 
+- Tema: variables CSS en `:root` (oscuro) y `[data-theme="light"]` en `style.css`; `applyTheme` (game.js) fija `data-theme`, lee `--grid`/`--ghost-alpha` para el canvas y redibuja. Se persiste en `localStorage` (`tetris-theme`).
+
 ## Gotchas
 
 - Cambiar `COLS`/`ROWS`/`BLOCK` exige ajustar `width`/`height` del canvas en `index.html` a mano.
