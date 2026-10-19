@@ -183,6 +183,15 @@ kbd {
   background: #000;
 }
 
+/* Neon + tema claro: overlay sobre tablero negro, paleta oscura para legibilidad */
+[data-skin="neon"] .overlay {
+  --overlay-bg: rgba(0, 0, 0, 0.75);
+  --danger: #ff5c6c;
+  --accent: #7aa2f7;
+  --accent-hover: #9bbdff;
+  --accent-contrast: #0f0f17;
+}
+
 /* ---- Overlay ---- */
 .overlay {
   position: absolute;

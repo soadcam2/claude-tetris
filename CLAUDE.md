@@ -18,10 +18,10 @@ Tres archivos: `index.html` (canvas `#board` 300x600, `#next-canvas` 120x120, HU
 - Puntuación: `LINE_SCORES * level`; hard drop +2/celda, soft drop +1/fila.
 
 - Tema: variables CSS en `:root` (oscuro) y `[data-theme="light"]` en `style.css`; `applyTheme` (game.js) fija `data-theme`, lee `--grid`/`--ghost-alpha` para el canvas y redibuja. Se persiste en `localStorage` (`tetris-theme`).
-- Skins: objeto `SKINS` {retro, neon, pastel, pixel} en game.js, cada una con `colors` (paleta, mismo índice que `COLORS`) y `draw(ctx, px, py, color, size)`. `drawBlock` (único punto de dibujo: board, ghost, next) delega en `activeSkin` y resetea shadow/alpha. `applySkin` fija `data-skin` en `<html>` (CSS: fondo negro para neon), `#skin-select`, redibuja. Persistida en `localStorage` (`tetris-skin`), independiente del tema.
+- Skins: `SKINS` {retro, neon, pastel, pixel} en game.js; cada una con `colors` (mismo índice que `COLORS`), `draw(ctx, px, py, color, size)` y opcionales `grid`/`ghostAlpha` (pisan los del tema). `SKINS.draw` usa coordenadas en PÍXELES (esquina del bloque) y queda envuelto en save/restore; `drawBlock(ctx, x, y, idx, size, alpha)` usa coordenadas de GRILLA (único punto de dibujo: board, ghost, next). `applySkin` fija `data-skin` en `<html>` (CSS: tablero negro en neon) y redibuja (`redraw`). Persistida en `localStorage` (`tetris-skin`), independiente del tema.
 
 ## Gotchas
 
 - Cambiar `COLS`/`ROWS`/`BLOCK` exige ajustar `width`/`height` del canvas en `index.html` a mano.
-- `drawNext` usa tamaño de bloque fijo 30 y caja 4x4.
+- `drawNext` usa tamaño de bloque fijo 30 (no `BLOCK`) y caja 4x4.
 - README.md (español) documenta lo mismo en detalle; mantener sincronizado si cambian mecánicas.

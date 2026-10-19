@@ -51,20 +51,25 @@ const SKINS = {
   },
   neon: {
     grid: '#1c1c24', // grilla oscura: el fondo es negro en ambos temas
+    ghostAlpha: 0.3,
     colors: [null, '#00f0ff', '#fff200', '#d400ff', '#39ff14', '#ff1744', '#2979ff', '#ff9100', '#e0e0e0'],
     draw(context, px, py, color, size) {
-      context.shadowColor = color;
-      context.shadowBlur = 12;
+      context.save();
+      context.globalAlpha *= 0.5; // relleno tenue (se multiplica por el alpha del ghost)
+      context.fillStyle = color;
+      context.fillRect(px + 3, py + 3, size - 6, size - 6);
+      context.restore();
+      context.save();
+      context.shadowColor = color; // brillo solo en el borde (costo acotado)
+      context.shadowBlur = 8;
       context.strokeStyle = color;
       context.lineWidth = 2;
       context.strokeRect(px + 3, py + 3, size - 6, size - 6);
-      context.shadowBlur = 0;
-      context.fillStyle = color;
-      context.globalAlpha *= 0.5;
-      context.fillRect(px + 3, py + 3, size - 6, size - 6);
+      context.restore();
     },
   },
   pastel: {
+    ghostAlpha: 0.5, // más opaco: con alpha bajo el contorno y brillo se ven turbios
     colors: [null, '#b5ead7', '#fff5ba', '#e0bbe4', '#c7f0bd', '#ffb3ba', '#bae1ff', '#ffdfba', '#d5dde2'],
     draw(context, px, py, color, size) {
       context.fillStyle = color;
@@ -80,6 +85,7 @@ const SKINS = {
     },
   },
   pixel: {
+    ghostAlpha: 0.45,
     colors: [null, '#29adff', '#ffec27', '#b5479a', '#00e436', '#ff004d', '#3d5bd1', '#ffa300', '#83769c'],
     draw(context, px, py, color, size) {
       const u = size / 6; // rejilla 6x6 de "píxeles"
@@ -97,10 +103,19 @@ const SKINS = {
     },
   },
 };
+// Cada draw queda autocontenido: nada de su estado (alpha, shadow, estilos) se filtra
+for (const skin of Object.values(SKINS)) {
+  const draw = skin.draw;
+  skin.draw = (context, px, py, color, size) => {
+    context.save();
+    draw(context, px, py, color, size);
+    context.restore();
+  };
+}
 const SKIN_KEY = 'tetris-skin';
 let activeSkin = SKINS.retro;
 
-const LINE_SCORES =[0, 100, 300, 500, 800];
+const LINE_SCORES = [0, 100, 300, 500, 800];
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -236,9 +251,9 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
+  context.save(); // aísla alpha de la llamada
   context.globalAlpha = alpha ?? 1;
-  context.save(); // aísla shadow/stroke/alpha de la skin
-  activeSkin.draw(context, x * size, y * size, activeSkin.colors[colorIndex], size);
+  activeSkin.draw(context, x * size, y * size, activeSkin.colors[colorIndex], size); // draw usa píxeles
   context.restore();
 }
 
@@ -273,7 +288,7 @@ function draw() {
   for (let r = 0; r < current.shape.length; r++)
     for (let c = 0; c < current.shape[r].length; c++)
       if (current.shape[r][c])
-        drawBlock(ctx, current.x + c, gy + r, current.shape[r][c], BLOCK, ghostAlpha);
+        drawBlock(ctx, current.x + c, gy + r, current.shape[r][c], BLOCK, activeSkin.ghostAlpha ?? ghostAlpha);
 
   // current piece
   for (let r = 0; r < current.shape.length; r++)
@@ -292,17 +307,21 @@ function drawNext() {
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
 }
 
+// redibujar para que el cambio se vea en pausa o game over
+function redraw() {
+  if (board && current && next) {
+    draw();
+    drawNext();
+  }
+}
+
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   themeToggle.textContent = theme === 'dark' ? '☀ Modo claro' : '🌙 Modo oscuro';
   const styles = getComputedStyle(document.documentElement);
   gridColor = styles.getPropertyValue('--grid').trim();
   ghostAlpha = parseFloat(styles.getPropertyValue('--ghost-alpha'));
-  // redibujar para que el cambio se vea en pausa o game over
-  if (board && current && next) {
-    draw();
-    drawNext();
-  }
+  redraw();
 }
 
 function applySkin(name) {
@@ -310,10 +329,7 @@ function applySkin(name) {
   activeSkin = SKINS[name];
   document.documentElement.dataset.skin = name;
   skinSelect.value = name;
-  if (board && current && next) {
-    draw();
-    drawNext();
-  }
+  redraw();
 }
 
 function endGame() {
@@ -374,7 +390,7 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (document.activeElement === skinSelect) skinSelect.blur(); // el juego tiene prioridad sobre el select
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return; // el select usa su teclado
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
