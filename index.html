@@ -42,6 +42,14 @@
           </ul>
         </div>
 
+        <div class="panel-section" id="records-panel">
+          <span class="label">RECORDS</span>
+          <ol id="records-list" class="records-list"></ol>
+          <div class="records-stat">Mejor combo: <b id="records-combo">0</b></div>
+          <div class="records-stat">Líneas máx: <b id="records-lines">0</b></div>
+          <button id="records-reset" type="button">Resetear records</button>
+        </div>
+
         <button id="theme-toggle" type="button" aria-label="Cambiar tema claro/oscuro"></button>
       </aside>
 
@@ -49,6 +57,14 @@
         <div class="overlay-box">
           <p id="overlay-title">GAME OVER</p>
           <p id="overlay-score"></p>
+          <div id="records-box" class="hidden">
+            <p id="records-msg"></p>
+            <form id="records-form" class="hidden" autocomplete="off">
+              <input id="records-name" type="text" maxlength="12" placeholder="Tu nombre" aria-label="Nombre del jugador" />
+              <button id="records-save" type="submit">Guardar</button>
+            </form>
+            <ol id="records-over-list" class="records-list"></ol>
+          </div>
           <button id="restart-btn">Reiniciar</button>
         </div>
       </div>
