@@ -253,24 +253,46 @@ function applyTheme(theme) {
 }
 
 // ---- Records ----
-function loadRecords() {
+function sanitizeRecords(data) {
   const rec = { top: [], bestCombo: 0, maxLines: 0 };
-  try {
-    const data = JSON.parse(localStorage.getItem(RECORDS_KEY));
-    if (data && Array.isArray(data.top)) {
-      rec.top = data.top
-        .filter(t => t && typeof t.score === 'number')
-        .map(t => ({ name: String(t.name ?? 'ANON').slice(0, 12), score: t.score }))
-        .sort((a, b) => b.score - a.score)
-        .slice(0, MAX_TOP);
-      rec.bestCombo = Number(data.bestCombo) || 0;
-      rec.maxLines = Number(data.maxLines) || 0;
-    }
-  } catch (e) { /* ignorar */ }
+  if (!data || typeof data !== 'object') return rec;
+  if (Array.isArray(data.top)) {
+    rec.top = data.top
+      .filter(t => t && typeof t === 'object' && Number.isFinite(t.score) && t.score > 0)
+      .map(t => ({
+        name: (typeof t.name === 'string' && t.name.trim() ? t.name.trim() : 'ANON').slice(0, 12),
+        score: Math.floor(t.score)
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, MAX_TOP);
+  }
+  const bc = Math.floor(Number(data.bestCombo));
+  const ml = Math.floor(Number(data.maxLines));
+  rec.bestCombo = Number.isFinite(bc) && bc > 0 ? bc : 0;
+  rec.maxLines = Number.isFinite(ml) && ml > 0 ? ml : 0;
   return rec;
 }
 
+function readStoredRecords() {
+  try { return sanitizeRecords(JSON.parse(localStorage.getItem(RECORDS_KEY))); } catch (e) { return sanitizeRecords(null); }
+}
+
+function loadRecords() {
+  return readStoredRecords();
+}
+
+// Relee localStorage y fusiona (otra pestaña pudo escribir) antes de guardar.
 function saveRecords() {
+  const stored = readStoredRecords();
+  const key = t => t.name + ' ' + t.score;
+  const seen = new Set();
+  // records.top va primero: en empate de score conserva el orden local (sort estable)
+  records.top = records.top.concat(stored.top)
+    .filter(t => !seen.has(key(t)) && seen.add(key(t)))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, MAX_TOP);
+  records.bestCombo = Math.max(records.bestCombo, stored.bestCombo);
+  records.maxLines = Math.max(records.maxLines, stored.maxLines);
   try { localStorage.setItem(RECORDS_KEY, JSON.stringify(records)); } catch (e) { /* sin persistencia */ }
 }
 
@@ -324,7 +346,8 @@ function showGameOverRecords() {
   recordsMsg.textContent = qualifies ? '¡Nuevo record! Escribe tu nombre' : 'RECORDS';
   recordsName.value = '';
   renderRecords();
-  if (qualifies) recordsName.focus();
+  // retrasa el foco: teclas aun presionadas (Space) no deben caer en el input
+  if (qualifies) setTimeout(() => { if (gameOver && !recordsForm.classList.contains('hidden')) { recordsName.value = ''; recordsName.focus(); } }, 500);
 }
 
 function submitRecord() {
@@ -336,6 +359,7 @@ function submitRecord() {
   saveRecords();
   recordsForm.classList.add('hidden');
   recordsMsg.textContent = 'Record guardado';
+  recordsName.blur();
   renderRecords(records.top.indexOf(entry));
 }
 
@@ -425,7 +449,10 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+restartBtn.addEventListener('click', () => {
+  init();
+  restartBtn.blur(); // evita que Space (caída) reactive Reiniciar
+});
 
 themeToggle.addEventListener('click', () => {
   const theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
@@ -442,9 +469,10 @@ recordsForm.addEventListener('submit', e => {
 recordsResetBtn.addEventListener('click', () => {
   if (confirm('¿Resetear todos los records?')) {
     records = { top: [], bestCombo: 0, maxLines: 0 };
-    saveRecords();
+    try { localStorage.setItem(RECORDS_KEY, JSON.stringify(records)); } catch (e) { /* sin persistencia */ }
     renderRecords();
     recordsForm.classList.add('hidden');
+    if (gameOver) recordsMsg.textContent = 'RECORDS';
   }
   lastTime = performance.now(); // confirm() bloquea; evita salto de dt
   recordsResetBtn.blur(); // evita que Space (caída) reactive el botón
