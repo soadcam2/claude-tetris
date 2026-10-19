@@ -15,6 +15,7 @@ Tres archivos: `index.html` (canvas `#board` 300x600, `#next-canvas` 120x120, HU
 - Flujo: `loop` (rAF) baja pieza por `dropInterval` -> `lockPiece` = `merge` + `clearLines` + `spawn`. `spawn` llama `endGame` si la pieza nueva colisiona.
 - `clearLines` también recalcula nivel (cada 10 líneas) y `dropInterval = max(100, 1000-(level-1)*90)`.
 - Input: un único listener `keydown` (por `e.code`) al final; `togglePause` cancela/reanuda rAF.
+- Pausa: `togglePause` muestra `#pause-menu` (separado de `#overlay`, que es solo game over): Reanudar, Reiniciar (`init()`), Ver controles, Nivel inicial (`startLevel`, usado por `init` y `clearLines`: `level=floor(lines/10)+startLevel`). P/Escape alternan; en pausa keydown ignora el resto.
 - Puntuación: `LINE_SCORES * level`; hard drop +2/celda, soft drop +1/fila.
 
 - Tema: variables CSS en `:root` (oscuro) y `[data-theme="light"]` en `style.css`; `applyTheme` (game.js) fija `data-theme`, lee `--grid`/`--ghost-alpha` para el canvas y redibuja. Se persiste en `localStorage` (`tetris-theme`).
