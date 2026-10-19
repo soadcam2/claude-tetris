@@ -111,7 +111,7 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + startLevel;
+    level = Math.floor(lines / 10) + baseLevel;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
   }
@@ -248,13 +248,13 @@ function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    hidePauseMenu();
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
     showPauseMenu();
   }
-  if (!paused) hidePauseMenu();
 }
 
 // ---- Menú de pausa ----
@@ -267,6 +267,8 @@ const controlsBtn = document.getElementById('controls-btn');
 const controlsBackBtn = document.getElementById('controls-back-btn');
 const startLevelSelect = document.getElementById('start-level');
 let startLevel = 1;
+let baseLevel = 1; // nivel inicial de la partida en curso
+startLevelSelect.value = '1'; // evita valor restaurado por el navegador
 
 function showPauseMenu() {
   pauseMain.classList.remove('hidden');
@@ -304,7 +306,8 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = startLevel;
+  baseLevel = startLevel;
+  level = baseLevel;
   paused = false;
   gameOver = false;
   dropInterval = Math.max(100, 1000 - (level - 1) * 90);
@@ -320,6 +323,7 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
+  if (e.repeat && (e.code === 'KeyP' || e.code === 'Escape')) return;
   if (e.code === 'Escape' && paused && !pauseControls.classList.contains('hidden')) {
     showPauseControls(false); // Escape en controles vuelve al menú
     return;
