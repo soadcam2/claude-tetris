@@ -43,6 +43,7 @@ Es una versión jugable del Tetris clásico con todas las mecánicas que esperar
 - **Sistema de puntuación** clásico de Tetris (100 / 300 / 500 / 800 multiplicado por nivel).
 - **Niveles** que aumentan cada 10 líneas y aceleran la caída.
 - **Pausa** y **Game Over** con opción de reinicio.
+- **Records locales**: Top 5 con nombre (campo de texto al Game Over si la puntuación entra), mejor combo y líneas máximas; se guardan en `localStorage` (`tetris-records`), se muestran en el panel lateral (sección RECORDS) y en el overlay de Game Over (fila propia resaltada). Botón "Resetear records" con confirmación. Combo = locks consecutivos con al menos una línea.
 - **Tema claro/oscuro**: oscuro por defecto; el botón del panel lateral alterna el tema y la elección se guarda en `localStorage`.
 
 ---
@@ -118,6 +119,7 @@ Contiene toda la lógica del juego. A grandes rasgos:
 - **Limpieza de líneas** (`clearLines`): recorre el tablero de abajo hacia arriba; cada fila completa se elimina y se inserta una vacía en la cima.
 - **Puntuación**: usa la tabla clásica `[0, 100, 300, 500, 800]` multiplicada por el nivel actual; el hard drop suma 2 puntos por celda recorrida y el soft drop 1 punto por fila.
 - **Nivel y velocidad**: el nivel sube cada 10 líneas; la velocidad de caída se calcula como `max(100, 1000 − (level − 1) × 90)` milisegundos.
+- **Records** (`loadRecords`, `saveRecords`, `trackCombo`, `showGameOverRecords`, `submitRecord`): estado `{top:[{name,score}], bestCombo, maxLines}` en `localStorage` (`tetris-records`). `lockPiece` llama a `trackCombo`; `endGame` actualiza líneas máx y muestra el formulario de nombre si la puntuación entra al top 5. El `keydown` global ignora eventos originados en un `<input>`.
 - **Ghost piece** (`ghostY`): proyecta la posición final de la pieza actual hacia abajo y la dibuja con `globalAlpha = 0.2`.
 
 ### Flujo del juego

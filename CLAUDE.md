@@ -19,6 +19,8 @@ Tres archivos: `index.html` (canvas `#board` 300x600, `#next-canvas` 120x120, HU
 
 - Tema: variables CSS en `:root` (oscuro) y `[data-theme="light"]` en `style.css`; `applyTheme` (game.js) fija `data-theme`, lee `--grid`/`--ghost-alpha` para el canvas y redibuja. Se persiste en `localStorage` (`tetris-theme`).
 
+- Records: `records` global `{top,bestCombo,maxLines}` en `localStorage` (`tetris-records`); `combo` se actualiza en `lockPiece` vía `trackCombo`; `endGame` -> `showGameOverRecords` (input de nombre en `#overlay`). El `keydown` global sale si `e.target` es INPUT.
+
 ## Gotchas
 
 - Cambiar `COLS`/`ROWS`/`BLOCK` exige ajustar `width`/`height` del canvas en `index.html` a mano.
