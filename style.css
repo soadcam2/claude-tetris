@@ -164,6 +164,25 @@ kbd {
   border-color: var(--accent);
 }
 
+/* ---- Selector de skin ---- */
+#skin-select {
+  align-self: flex-start;
+  background: var(--kbd-bg);
+  color: var(--kbd-text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Neon: fondo negro de board/next en ambos temas */
+[data-skin="neon"] #board,
+[data-skin="neon"] #next-canvas {
+  background: #000;
+}
+
 /* ---- Overlay ---- */
 .overlay {
   position: absolute;
