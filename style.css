@@ -164,6 +164,34 @@ kbd {
   border-color: var(--accent);
 }
 
+/* ---- Selector de skin ---- */
+#skin-select {
+  align-self: flex-start;
+  background: var(--kbd-bg);
+  color: var(--kbd-text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Neon: fondo negro de board/next en ambos temas */
+[data-skin="neon"] #board,
+[data-skin="neon"] #next-canvas {
+  background: #000;
+}
+
+/* Neon + tema claro: overlay sobre tablero negro, paleta oscura para legibilidad */
+[data-skin="neon"] .overlay {
+  --overlay-bg: rgba(0, 0, 0, 0.75);
+  --danger: #ff5c6c;
+  --accent: #7aa2f7;
+  --accent-hover: #9bbdff;
+  --accent-contrast: #0f0f17;
+}
+
 /* ---- Overlay ---- */
 .overlay {
   position: absolute;
