@@ -230,6 +230,12 @@ kbd {
   font-size: 12px;
 }
 
+.pause-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .pause-keys {
   list-style: none;
   display: flex;

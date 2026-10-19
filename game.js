@@ -112,9 +112,14 @@ function clearLines() {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
     level = Math.floor(lines / 10) + baseLevel;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    dropInterval = intervalFor(level);
     updateHUD();
   }
+}
+
+// Intervalo de caída (ms) según nivel
+function intervalFor(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
 }
 
 function ghostY() {
@@ -310,7 +315,7 @@ function init() {
   level = baseLevel;
   paused = false;
   gameOver = false;
-  dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+  dropInterval = intervalFor(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();

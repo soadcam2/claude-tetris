@@ -90,7 +90,7 @@ Después abre `http://localhost:8000` en el navegador.
 
 ### Menú de pausa
 
-Al pausar aparece `#pause-menu` con: **Reanudar**, **Reiniciar** (nueva partida sin recargar), **Ver controles** (`Esc` vuelve al menú) y **Nivel inicial** (1–10, se aplica a la próxima partida/reinicio). Mientras está abierto, el resto de teclas del juego se ignoran.
+Al pausar aparece `#pause-menu` con: **Reanudar**, **Reiniciar** (nueva partida sin recargar), **Ver controles** (`Esc` vuelve al menú) y **Nivel inicial** (1–10; define nivel y velocidad iniciales; no afecta la partida en curso, solo se aplica al reiniciar o en la próxima partida). Mientras está abierto, el resto de teclas del juego se ignoran.
 
 ---
 
